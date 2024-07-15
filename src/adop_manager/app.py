@@ -77,7 +77,7 @@ class AdOpManager:
 
         self.progress = builder.longIn("PROGRESS", PINI="YES", initial_value=0)
 
-        self.run_script = builder.boolOut(
+        self.run = builder.boolOut(
             "RUN",
             ZNAM="Done",
             ONAM="Busy",
@@ -85,7 +85,7 @@ class AdOpManager:
             on_update=self.launch_script,
         )
 
-        self.stop_script = builder.boolOut(
+        self.stop = builder.boolOut(
             "STOP",
             ZNAM="Done",
             ONAM="Busy",
@@ -94,7 +94,7 @@ class AdOpManager:
             initial_value=0,
         )
 
-        self.kill_script = builder.boolOut(
+        self.kill = builder.boolOut(
             "KILL",
             ZNAM="DONE",
             ONAM="Busy",
@@ -203,7 +203,7 @@ class AdOpManager:
                 self.logger.info(
                     f"Run called whilst script already active (PID {self.process.pid}); ignoring"
                 )
-            self.run_script.set(0)
+            self.run.set(0)
 
     async def terminate_script(self, value: int) -> None:
         if value == 1:
@@ -233,7 +233,7 @@ class AdOpManager:
                 else:
                     print("Process already terminated")
                     self.process = None
-        self.stop_script.set(0)
+        self.stop.set(0)
 
     async def kill_script(self, value: int) -> None:
         if value == 1:
@@ -254,7 +254,7 @@ class AdOpManager:
                 else:
                     print("Process already terminated")
                     self.process = None
-        self.kill_script.set(0)
+        self.kill.set(0)
 
     def set_map_config(self, value: int) -> None:
         # assert value in self.maps["std_masks"].keys(), "%s is not a known config" % value
