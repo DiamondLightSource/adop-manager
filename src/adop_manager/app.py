@@ -290,6 +290,6 @@ class AdOpManager:
 
     async def do_mirror_reset(self, value):
         if value == 1:
-            await caput(self.mirror_prefix[0] + ":RESET", 1)
-            await caput(self.mirror_prefix[1] + ":RESET", 1)
+            await caput(f"{self.mirror_prefix[0]}:RESET", 1)
+            await caput(f"{self.mirror_prefix[1]}:RESET", 1)
             self.reset_mirrors.set(0)
