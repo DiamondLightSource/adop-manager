@@ -49,12 +49,9 @@ class AdOpManager:
 
         self.map_config = None
 
-        self.status_string = None
-        self.status = None
-        self.progress = None
         self.restart_iocs = None
 
-        self.process = None
+        self.process: subprocess.Popen | None = None
         self.return_status = None
 
         self.log_file = None
@@ -202,6 +199,7 @@ class AdOpManager:
                 self.progress.set(0)
                 self.status.set(1)
             else:
+                assert isinstance(self.process, subprocess.Popen)
                 self.logger.info(
                     f"Run called whilst script already active (PID {self.process.pid}); ignoring"
                 )
@@ -271,6 +269,8 @@ class AdOpManager:
     async def load_maps(self, value: int) -> None:
         mask_value = await caget("BL22B-DI-ADOP-01:SETUP")
         print(f"Mask Value: {mask_value}")
+        assert self.optics_menu_strings is not None
+        assert isinstance(mask_value, int)  # TODO: This may not work
         self.map_config = self.optics_menu_strings[mask_value]
         assert self.map_config is not None, "No config set"
         map1: str = self.maps["std_masks"][self.map_config]["dm1"]
