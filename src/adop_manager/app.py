@@ -15,16 +15,16 @@ class AdOpManager:
     def __init__(
         self,
         device_name: str,
-        script_call: str | tuple[str],
-        log_path: str,
-        config_path: str,
+        script_call: str | tuple[str, ...],
+        log_path: Path,
+        config_path: Path,
         mirror_1: str,
         mirror_2: str,
         ioc_status_timeout: int = 30,
-    ):
+    ) -> None:
         self.device_name = device_name
         self.script_call = script_call
-        self.log_path = Path(log_path)
+        self.log_path = log_path
         self.config_path = config_path
         self.mirror1 = mirror_1
         self.mirror2 = mirror_2
@@ -62,7 +62,7 @@ class AdOpManager:
         self.create_pvs()
         self.logger.info(f"Created ScriptManager: {self.device_name}")
 
-    def create_pvs(self):
+    def create_pvs(self) -> None:
         builder.SetDeviceName(self.device_name)
         initial_status = "Ready"
         if self.file_error:
@@ -191,7 +191,7 @@ class AdOpManager:
                             self.logger.warn(f"{self.process.pid}: {line}")
             await asyncio.sleep(10.0)
 
-    def launch_script(self, value) -> None:
+    def launch_script(self, value: int) -> None:
         if value == 1:
             if not self.is_running():
                 self.process = subprocess.Popen(
@@ -292,7 +292,7 @@ class AdOpManager:
         await caput(f"{self.mirror_prefix[1]}:CP_ST_TO_ACT.PROC", 1, wait=True)
         self.apply_config.set(0)
 
-    async def do_mirror_reset(self, value):
+    async def do_mirror_reset(self, value: int) -> None:
         if value == 1:
             await caput(f"{self.mirror_prefix[0]}:RESET", 1)
             await caput(f"{self.mirror_prefix[1]}:RESET", 1)
