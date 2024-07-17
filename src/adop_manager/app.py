@@ -56,8 +56,8 @@ class AdOpManager:
 
         self.log_file = None
         if self.log_path.exists():
-            self.stdout = open(f"{log_path}/stdout.log", "w")
-            self.stderr = open(f"{log_path}/stderr.log", "w")
+            self.stdout = f"{log_path}/stdout.log"
+            self.stderr = f"{log_path}/stderr.log"
 
         self.create_pvs()
         self.logger.info(f"Created ScriptManager: {self.device_name}")
@@ -171,11 +171,15 @@ class AdOpManager:
                 err = self.process.stderr.read().decode()
 
                 if self.log_file is not None:
-                    self.stdout.write(out)
-                    self.stdout.flush()
+                    with (
+                        open(self.stdout, "w") as stdout,
+                        open(self.stderr, "w") as stderr,
+                    ):
+                        stdout.write(out)
+                        stdout.flush()
 
-                    self.stderr.write(err)
-                    self.stderr.flush()
+                        stderr.write(err)
+                        stderr.flush()
 
                 if len(out) > 0:
                     for line in out.split("\n"):
