@@ -43,26 +43,34 @@ class SimulatedProcServIoc:
         self.event = asyncio.Event()
         while True:
             await self.event.wait()
-            if self.event_type == "START":
-                self.logger.info("{0} starting...".format(self.name))
-                await asyncio.sleep(self.ioc_start_time)
-                self.status.set(0)
-                self.start.set(0)
-                self.logger.info("{0} started.".format(self.name))
-            elif self.event_type == "STOP":
-                self.logger.info("{0} stopping...".format(self.name))
-                await asyncio.sleep(self.ioc_stop_time)
-                self.status.set(1)
-                self.stop.set(0)
-                self.logger.info("{0} stopped.".format(self.name))
-            elif self.event_type == "RESTART":
-                self.logger.info("{0} restarting...".format(self.name))
-                await asyncio.sleep(self.ioc_stop_time)
-                self.status.set(1)
-                await asyncio.sleep(self.ioc_start_time)
-                self.status.set(0)
-                self.restart.set(0)
-                self.logger.info("{0} restarted.".format(self.name))
+
+            match self.event_type:
+                case "START":
+                    self.logger.info(f"{self.name} starting...")
+                    await asyncio.sleep(self.ioc_start_time)
+                    self.status.set(0)
+                    self.start.set(0)
+                    self.logger.info(f"{self.name} started.")
+                case "STOP":
+                    self.logger.info(f"{self.name} stopping...")
+                    await asyncio.sleep(self.ioc_stop_time)
+                    self.status.set(1)
+                    self.stop.set(0)
+                    self.logger.info(f"{self.name} stopped.")
+                case "RESTART":
+                    self.logger.info(f"{self.name} restarting...")
+                    await asyncio.sleep(self.ioc_stop_time)
+                    self.status.set(1)
+                    await asyncio.sleep(self.ioc_start_time)
+                    self.status.set(0)
+                    self.restart.set(0)
+                    self.logger.info(f"{self.name} restarted.")
+                case _:
+                    self.logger.warn(f"Event type '{self.event_type}' unknown.")
+
+            # Clear event type so an event isn't triggered accidentally if by chance
+            # the event flag is set
+            self.event_type = ""
 
     def create_pvs(self) -> None:
         builder.SetDeviceName(self.name)
