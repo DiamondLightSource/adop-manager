@@ -1,42 +1,70 @@
 import asyncio
-from argparse import ArgumentParser
+from functools import wraps
 from pathlib import Path
+from typing import Annotated
+
+import typer
 
 from . import __version__
 from .app import AdOpManager
 
 __all__ = ["main"]
 
+app = typer.Typer()
 
-async def main(args=None):
-    parser = ArgumentParser()
 
-    parser.add_argument("--version", "-v", action="version", version=__version__)
+def run_async(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        return asyncio.run(func(*args, **kwargs))
 
-    parser.add_argument("name", "--name", "-n", type=str, required=True)
-    parser.add_argument(
-        "script_call", "--script-call", "-s", type=tuple[str, ...], required=True
+    return wrapper
+
+
+@app.command("version")
+def version():
+    """
+    Print out the version of the AdOp Manager.
+    """
+    print(__version__)
+
+
+@app.command("run")
+@run_async
+async def adop_manager_app(
+    name: Annotated[str, typer.Argument()],
+    script_call: Annotated[
+        str,
+        typer.Argument(
+            help='If the script call has multiple arguments, enclose in quote marks, e.g. "python arg1 arh2"'
+        ),
+    ],
+    log_path: Annotated[Path, typer.Argument()],
+    config_path: Annotated[Path, typer.Argument()],
+    mirror1: Annotated[str, typer.Argument()],
+    mirror2: Annotated[str, typer.Argument()],
+    timeout: Annotated[int, typer.Argument()] = 30,
+):
+    """
+    Run the AdOp Manager.
+    """
+    adop_manager = AdOpManager(
+        name,
+        script_call,
+        log_path,
+        config_path,
+        mirror1,
+        mirror2,
+        timeout,
     )
-    parser.add_argument("log_path", "--log-path", "-l", type=Path, required=True)
-    parser.add_argument("config_path", "--config-path", "-c", type=Path, required=True)
-    parser.add_argument("mirror1", "--mirror1", "-m1", type=str, required=True)
-    parser.add_argument("mirror2", "--mirror2", "-m2", type=str, required=True)
-    parser.add_argument(
-        "timeout", "--timeout", "-t", type=int, required=False, default=30
-    )
 
-    args = parser.parse_args(args)
-    AdOpManager(
-        args.name,
-        args.script_call,
-        args.log_path,
-        args.config_path,
-        args.mirror1,
-        args.mirror2,
-        args.timeout,
-    )
+    await adop_manager.log_script()
 
 
-# test with: pipenv run python -m adop_manager
+def main() -> None:
+    app()
+
+
+# test with: python -m adop_manager
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
