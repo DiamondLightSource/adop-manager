@@ -121,7 +121,7 @@ class AdOpManager:
         else:
             # There doesn't seem to be a way to access the mbbOut string fields after initialisation, only the VAL field, so
             # we cache the array of condenser strings in the order we set the menu fields so the indexing will be correct
-            condensers: list[str] = self.maps["std_masks"].keys()
+            condensers: list[str] = list(self.maps["std_masks"].keys())
             assert (
                 len(condensers) == 4
             ), f"Problem loading condensers array - expected 4 elements, got {condensers}"
