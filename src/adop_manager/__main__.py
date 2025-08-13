@@ -1,16 +1,18 @@
 import asyncio
+import logging
 from functools import wraps
 from pathlib import Path
 from typing import Annotated
 
 import typer
+from rich.logging import RichHandler
 
 from . import __version__
 from .app import AdOpManager
 
 __all__ = ["main"]
 
-app = typer.Typer()
+app = typer.Typer(pretty_exceptions_show_locals=False)
 
 
 def run_async(func):
@@ -21,12 +23,18 @@ def run_async(func):
     return wrapper
 
 
-@app.command("version")
-def version():
-    """
-    Print out the version of the AdOp Manager.
-    """
-    print(__version__)
+def version_callback(value: bool):
+    if value:
+        print(f"adop-manager version: {__version__}")
+        raise typer.Exit()
+
+
+def log_level(level: str):
+    logging.basicConfig(
+        level=level,
+        format="%(message)s",
+        handlers=[RichHandler(omit_repeated_times=False, markup=True)],
+    )
 
 
 @app.command("run")
@@ -62,10 +70,27 @@ e.g. "python arg1 arg2"'
     await adop_manager.log_script()
 
 
-def main() -> None:
-    app()
+# This is the default behaviour when no command provided
+@app.callback(invoke_without_command=True)
+def main(
+    version: Annotated[
+        bool | None, typer.Option("--version", callback=version_callback)
+    ] = None,
+    loglevel: Annotated[
+        str,
+        typer.Option(
+            "--log-level",
+            help="Set log level to INFO, DEBUG, WARNING, ERROR or CRITICAL",
+            case_sensitive=False,
+            callback=log_level,
+        ),
+    ] = "INFO",
+) -> None:
+    """Default function called from cmd line tool."""
+
+    pass
 
 
 # test with: python -m adop_manager
 if __name__ == "__main__":
-    main()
+    app()
