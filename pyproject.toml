@@ -40,7 +40,7 @@ dev = [
 ]
 
 [project.scripts]
-adop-manager = "adop_manager.__main__:main"
+adop-manager = "adop_manager.__main__:app"
 
 [project.urls]
 GitHub = "https://github.com/DiamondLightSource/adop-manager"
@@ -54,7 +54,7 @@ version_file = "src/adop_manager/_version.py"
 
 [tool.pyright]
 typeCheckingMode = "standard"
-reportMissingImports = false # Ignore missing stubs in imported modules
+reportMissingImports = false  # Ignore missing stubs in imported modules
 
 [tool.pytest.ini_options]
 # Run pytest with all our checkers, and don't spam us with massive tracebacks on error
