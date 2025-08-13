@@ -13,6 +13,9 @@ classifiers = [
 ]
 description = "Control software for Adaptive Optics on B22"
 dependencies = [
+    "aioca>=1.8.1",
+    "numpy>=2.3.2",
+    "softioc>=4.6.1",
     "typer>=0.16.0",
 ] # Add project dependencies here, e.g. ["click", "numpy"]
 dynamic = ["version"]
