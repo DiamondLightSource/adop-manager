@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 
@@ -9,16 +10,16 @@ from .datamodel import (
 )
 
 
-class XmlParser(object):
-    def __init__(self) -> None:
-        pass
-
+@dataclass
+class XmlParser:
     @staticmethod
     def get_root(xml_string: str) -> Element:
         try:
             return ElementTree.fromstring(xml_string)
         except ElementTree.ParseError:
-            raise ValueError("Could not find root in xml string")
+            raise ValueError(
+                "Could not find root in xml string"
+            ) from ElementTree.ParseError
 
     @staticmethod
     def get_child_tag_text(parent: Element, tag_name: str) -> str | None:
@@ -26,7 +27,7 @@ class XmlParser(object):
         try:
             assert isinstance(tag, Element)
             return tag.text
-        except AttributeError | AssertionError:
+        except (AttributeError, AssertionError):
             return None
 
     @staticmethod
@@ -38,10 +39,8 @@ class XmlParser(object):
         return parent.findall(child_name)
 
 
+@dataclass
 class ConfigXmlParser(XmlParser):
-    def __init__(self) -> None:
-        super(ConfigXmlParser, self).__init__()
-
     @staticmethod
     def string_exists_in_list(string: str, string_list: list[str]) -> bool:
         for item in string_list:
@@ -72,9 +71,9 @@ class ConfigXmlParser(XmlParser):
         controlled_ioc_elements = ConfigXmlParser.find_child_elements(
             ioc_controller_element, "controlled_ioc"
         )
-        assert (
-            controlled_ioc_elements is not None
-        ), "No XML element for 'controlled_ioc'"
+        assert controlled_ioc_elements is not None, (
+            "No XML element for 'controlled_ioc'"
+        )
         for ioc_element in controlled_ioc_elements:
             ioc_name = ConfigXmlParser.get_child_tag_text(ioc_element, "name")
             ioc_priority = ConfigXmlParser.get_child_tag_text(ioc_element, "priority")
@@ -98,9 +97,9 @@ class ConfigXmlParser(XmlParser):
             ioc_controller_element, "name"
         )
 
-        assert (
-            controller_name is not None
-        ), "No XML element for 'name' in 'ioc_controller'"
+        assert controller_name is not None, (
+            "No XML element for 'name' in 'ioc_controller'"
+        )
 
         controller_label = ConfigXmlParser.get_child_tag_text(
             ioc_controller_element, "label"
