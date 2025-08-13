@@ -3,6 +3,7 @@ import json
 import logging
 import signal
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -11,39 +12,31 @@ from aioca import caget, caput
 from softioc import builder
 
 
+@dataclass
 class AdOpManager:
-    def __init__(
-        self,
-        device_name: str,
-        script_call: str | tuple[str, ...],
-        log_path: Path,
-        config_path: Path,
-        mirror_1: str,
-        mirror_2: str,
-        ioc_status_timeout: int = 30,
-    ) -> None:
-        self.device_name = device_name
-        self.script_call = script_call
-        self.log_path = log_path
-        self.config_path = config_path
-        self.mirror1 = mirror_1
-        self.mirror2 = mirror_2
-        self.ioc_status_timeout = ioc_status_timeout
+    device_name: str
+    script_call: str | tuple[str, ...]
+    log_path: Path
+    config_path: Path
+    mirror_1: str
+    mirror_2: str
+    ioc_status_timeout: int = 30
 
+    def __post_init__(self):
         self.logger = logging.getLogger(__name__)
 
-        if isinstance(script_call, tuple):
-            self.script_call = " ".join(script_call)
+        if isinstance(self.script_call, tuple):
+            self.script_call = " ".join(self.script_call)
         else:
-            self.script_call = script_call
+            self.script_call = self.script_call
         self.file_error = False
 
-        self.mirror_prefix = (mirror_1, mirror_2)
+        self.mirror_prefix = (self.mirror_1, self.mirror_2)
 
         try:
-            with open(config_path, "r") as f:
+            with open(self.config_path) as f:
                 self.maps: dict[str, Any] = json.load(f)
-        except IOError:
+        except OSError:
             self.file_error = True
             self.maps = {}
 
@@ -56,8 +49,8 @@ class AdOpManager:
 
         self.log_file = None
         if self.log_path.exists():
-            self.stdout = f"{log_path}/stdout.log"
-            self.stderr = f"{log_path}/stderr.log"
+            self.stdout = f"{self.log_path}/stdout.log"
+            self.stderr = f"{self.log_path}/stderr.log"
 
         self.create_pvs()
         self.logger.info(f"Created ScriptManager: {self.device_name}")
@@ -119,12 +112,15 @@ class AdOpManager:
             self.optics_menu_strings = None
             self.logger.error("Can't load condensers array - file error")
         else:
-            # There doesn't seem to be a way to access the mbbOut string fields after initialisation, only the VAL field, so
-            # we cache the array of condenser strings in the order we set the menu fields so the indexing will be correct
+            # There doesn't seem to be a way to access the mbbOut string fields after
+            # initialisation, only the VAL field, so we cache the array of condenser
+            # strings in the order we set the menu fields so the indexing will be
+            # correct
             condensers: list[str] = list(self.maps["std_masks"].keys())
-            assert (
-                len(condensers) == 4
-            ), f"Problem loading condensers array - expected 4 elements, got {condensers}"
+            assert len(condensers) == 4, (
+                f"Problem loading condensers array - expected 4 elements, \
+got {condensers}"
+            )
             self.optics_menu = builder.mbbOut(
                 "SETUP",
                 ZRST=condensers[0],
@@ -188,7 +184,7 @@ class AdOpManager:
                 if len(err) > 0:
                     for line in err.split("\n"):
                         if len(line.strip()) > 0:
-                            self.logger.warn(f"{self.process.pid}: {line}")
+                            self.logger.warning(f"{self.process.pid}: {line}")
             await asyncio.sleep(10.0)
 
     def launch_script(self, value: int) -> None:
@@ -198,14 +194,16 @@ class AdOpManager:
                     self.script_call, shell=True
                 )  # , stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 self.logger.info(
-                    f"Launched process {self.process.pid}, invocation {self.script_call}"
+                    f"Launched process {self.process.pid}, invocation \
+{self.script_call}"
                 )
                 self.progress.set(0)
                 self.status.set(1)
             else:
                 assert isinstance(self.process, subprocess.Popen)
                 self.logger.info(
-                    f"Run called whilst script already active (PID {self.process.pid}); ignoring"
+                    f"Run called whilst script already active (PID {self.process.pid});\
+ ignoring"
                 )
             self.run.set(0)
 
@@ -227,7 +225,8 @@ class AdOpManager:
                         retries += 1
                     if self.is_running() and retries == 10:
                         print(
-                            f"Process failed to terminate, poll result {self.process.poll()}"
+                            f"Process failed to terminate, poll result \
+{self.process.poll()}"
                         )
                         self.status_string.set("Stop Failed")
                     else:
@@ -261,10 +260,12 @@ class AdOpManager:
         self.kill.set(0)
 
     def set_map_config(self, value: int) -> None:
-        # assert value in self.maps["std_masks"].keys(), "%s is not a known config" % value
-        # TODO: For some reason whenever I set the PV, value here is always zero regardless of the actual value of VAL.
-        # Moreover, this only seems to get called once, however many times I toggle the PV.
-        # Will have to work around using cagets
+        # assert value in self.maps["std_masks"].keys(), "%s is not a known config" %
+        # value
+        # TODO: For some reason whenever I set the PV, value here is always zero
+        # regardless of the actual value of VAL. Moreover, this only seems to get
+        # called once, however many times I toggle the PV. Will have to work around
+        # using cagets
         assert self.optics_menu_strings is not None
         self.map_config = self.optics_menu_strings[value]
         print(self.optics_menu_strings[value])

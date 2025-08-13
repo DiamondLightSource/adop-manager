@@ -1,39 +1,38 @@
+from dataclasses import dataclass
+
+
+@dataclass
 class ControlledIocConfig:
-    def __init__(self, name: str, priority: None | int = None) -> None:
-        assert name is not None, "Name cannot be None."
+    name: str
+    priority: int = 0
 
-        self.name = name
-        if priority is None:
-            self.priority = 0
-        else:
-            self.priority = priority
+    def __post_init__(self):
+        assert self.name is not None, "Name cannot be None."
 
 
+@dataclass
 class IocConfig:
-    def __init__(self, name: str) -> None:
-        assert name is not None, "Name cannot be None."
+    name: str
 
-        self.name = name
+    def __post_init__(self):
+        assert self.name is not None, "Name cannot be None."
 
 
+@dataclass
 class IocControllerConfig:
-    def __init__(
-        self,
-        name: str,
-        controlled_ioc_configs: list[ControlledIocConfig] | ControlledIocConfig,
-        label: str | None = None,
-    ) -> None:
-        assert name is not None, "Name cannot be None."
-        assert (
-            controlled_ioc_configs is not None
-        ), "controlled_ioc_configs cannot be None."
+    name: str
+    controlled_ioc_configs: list[ControlledIocConfig] | ControlledIocConfig
+    label: str | None = None
 
-        self.name = name
-        self.ioc_list = self.parse_controlled_ioc_configs(controlled_ioc_configs)
-        if label is not None:
-            self.label = label
-        else:
-            self.label = name
+    def __post_init__(self):
+        assert self.name is not None, "Name cannot be None."
+        assert self.controlled_ioc_configs is not None, (
+            "controlled_ioc_configs cannot be None."
+        )
+
+        self.ioc_list = self.parse_controlled_ioc_configs(self.controlled_ioc_configs)
+        if self.label is None:
+            self.label = self.name
 
     @staticmethod
     def parse_controlled_ioc_configs(
@@ -104,11 +103,14 @@ class MbbFields:
         return fields
 
 
+@dataclass
 class SimulatedIocsConfig:
-    def __init__(self, list_ioc_names: str | list[str]) -> None:
-        assert list_ioc_names is not None, "list_ioc_names cannot be None."
+    list_ioc_names: str | list[str]
 
-        self.list_ioc_names = self.parse_list_ioc_names(list_ioc_names)
+    def __post_init__(self):
+        assert self.list_ioc_names is not None, "list_ioc_names cannot be None."
+
+        self.list_ioc_names = self.parse_list_ioc_names(self.list_ioc_names)
 
     @staticmethod
     def parse_list_ioc_names(list_ioc_names: str | list[str]) -> list[str]:

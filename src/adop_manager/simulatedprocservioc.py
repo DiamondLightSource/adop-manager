@@ -11,28 +11,39 @@ Arguments:
 
 import asyncio
 import logging
+from dataclasses import dataclass, field
 
 from softioc import builder
 
 from .datamodel import MbbFields
 
 
+@dataclass
 class SimulatedProcServIoc:
-    ioc_statuses = ["Running", "Shutdown", "procServ Stopped", "Invalid portname"]
+    device_name: str
+    ioc_stop_time: float = 2.0
+    ioc_start_time: float = 5.0
+    event_type: str = ""
+    ioc_statuses: list[str] = field(
+        default_factory=lambda: [
+            "Running",
+            "Shutdown",
+            "procServ Stopped",
+            "Invalid portname",
+        ],
+        init=False,
+        repr=False,
+    )
 
-    def __init__(self, device_name: str) -> None:
-        assert device_name is not None, "Device Name is None"
+    def __post_init__(self):
+        assert self.device_name is not None, "Device Name is None"
 
         self.logger = logging.getLogger(__name__)
-        self.name = device_name
         self.ioc_status_fields = self.get_ioc_status_fields()
-        self.ioc_stop_time = 2.0
-        self.ioc_start_time = 5.0
-        self.event_type = ""
 
         self.create_pvs()
         self.create_event_thread()
-        self.logger.info("Created Simulated IOC: {0}".format(device_name))
+        self.logger.info(f"Created Simulated IOC: {self.device_name}")
 
     def create_event_thread(self) -> None:
         asyncio.run_coroutine_threadsafe(
@@ -46,25 +57,25 @@ class SimulatedProcServIoc:
 
             match self.event_type:
                 case "START":
-                    self.logger.info(f"{self.name} starting...")
+                    self.logger.info(f"{self.device_name} starting...")
                     await asyncio.sleep(self.ioc_start_time)
                     self.status.set(0)
                     self.start.set(0)
-                    self.logger.info(f"{self.name} started.")
+                    self.logger.info(f"{self.device_name} started.")
                 case "STOP":
-                    self.logger.info(f"{self.name} stopping...")
+                    self.logger.info(f"{self.device_name} stopping...")
                     await asyncio.sleep(self.ioc_stop_time)
                     self.status.set(1)
                     self.stop.set(0)
-                    self.logger.info(f"{self.name} stopped.")
+                    self.logger.info(f"{self.device_name} stopped.")
                 case "RESTART":
-                    self.logger.info(f"{self.name} restarting...")
+                    self.logger.info(f"{self.device_name} restarting...")
                     await asyncio.sleep(self.ioc_stop_time)
                     self.status.set(1)
                     await asyncio.sleep(self.ioc_start_time)
                     self.status.set(0)
                     self.restart.set(0)
-                    self.logger.info(f"{self.name} restarted.")
+                    self.logger.info(f"{self.device_name} restarted.")
                 case _:
                     self.logger.warn(f"Event type '{self.event_type}' unknown.")
 
@@ -73,7 +84,7 @@ class SimulatedProcServIoc:
             self.event_type = ""
 
     def create_pvs(self) -> None:
-        builder.SetDeviceName(self.name)
+        builder.SetDeviceName(self.device_name)
 
         self.status = builder.mbbIn("STATUS", PINI="YES", **self.ioc_status_fields)
 
