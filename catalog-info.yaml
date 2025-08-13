@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: adop-manager
+  title: adop-manager
+  description: Control software for Adaptive Optics on B22
+spec:
+  type: library
+  lifecycle: experimental
+  owner: group:default/beamline-controls

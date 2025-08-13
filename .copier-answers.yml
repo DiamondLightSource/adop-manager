@@ -1,0 +1,19 @@
+# Changes here will be overwritten by Copier
+_commit: 4.1.0-9-g581aaba
+_src_path: gh:DiamondLightSource/python-copier-template
+author_email: oliver.copping@diamond.ac.uk
+author_name: Oliver Copping
+component_lifecycle: experimental
+component_owner: group:default/beamline-controls
+component_type: library
+description: Control software for Adaptive Optics on B22
+distribution_name: adop-manager
+docker: false
+docs_type: README
+git_platform: github.com
+github_org: DiamondLightSource
+package_name: adop_manager
+pypi: false
+repo_name: adop-manager
+strict_typing: false
+type_checker: pyright

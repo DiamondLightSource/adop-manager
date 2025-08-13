@@ -36,7 +36,8 @@ async def adop_manager_app(
     script_call: Annotated[
         str,
         typer.Argument(
-            help='If the script call has multiple arguments, enclose in quote marks, e.g. "python arg1 arh2"'
+            help='If the script call has multiple arguments, enclose in quote marks, \
+e.g. "python arg1 arg2"'
         ),
     ],
     log_path: Annotated[Path, typer.Argument()],
